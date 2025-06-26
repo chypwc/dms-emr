@@ -35,12 +35,12 @@ Resources:
       EndpointIdentifier: postgresql-local-macbook
       EndpointType: source
       EngineName: postgres
+      DatabaseName: imba
+      SslMode: none
+      Port: 5432
       PostgreSqlSettings:
         SecretsManagerSecretId: !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${PostgreSQLSecret}
         SecretsManagerAccessRoleArn: !ImportValue EMRDMSGlueExecutionRoleArn
-        DatabaseName: imba
-        SslMode: none
-        Port: 5432
 
   DmsReplicationSubnetGroup:
     Type: AWS::DMS::ReplicationSubnetGroup

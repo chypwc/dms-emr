@@ -15,9 +15,9 @@ Resources:
           - Effect: Allow
             Principal:
               Service:
-                - elasticmapreduce.amazonaws.com
-                - dms.amazonaws.com
-                - glue.amazonaws.com
+                - !Sub elasticmapreduce.${AWS::Region}.amazonaws.com
+                - !Sub dms.${AWS::Region}.amazonaws.com
+                - !Sub glue.${AWS::Region}.amazonaws.com
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonS3FullAccess # Access to S3 (e.g., logs, data)
