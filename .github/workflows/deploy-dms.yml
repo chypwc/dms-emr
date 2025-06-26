@@ -120,7 +120,7 @@ jobs:
           aws dms describe-connections \
             --filters "Name=endpoint-arn,Values=${{ env.ENDPOINT_ARN }}"
 
-      - name: Start DMS Replication Task
+      - name: Start or Resume DMS Replication Task
         run: |
           TASK_ARN=$(aws cloudformation describe-stacks \
             --stack-name dms \
@@ -128,9 +128,27 @@ jobs:
             --output text)
 
           echo "Replication Task ARN: $TASK_ARN"
-          aws dms start-replication-task \
-            --replication-task-arn $TASK_ARN \
-            --start-replication-task-type start-replication
+
+          TASK_STATUS=$(aws dms describe-replication-tasks \
+            --filters "Name=replication-task-arn,Values=$TASK_ARN" \
+            --query "ReplicationTasks[0].Status" \
+            --output text)
+
+          echo "Current task status: $TASK_STATUS"
+
+          if [ "$TASK_STATUS" = "stopped" ]; then
+            echo "Resuming replication task..."
+            aws dms start-replication-task \
+              --replication-task-arn $TASK_ARN \
+              --start-replication-task-type resume-processing
+          elif [ "$TASK_STATUS" = "ready" ] || [ "$TASK_STATUS" = "failed" ]; then
+            echo "Starting replication task..."
+            aws dms start-replication-task \
+              --replication-task-arn $TASK_ARN \
+              --start-replication-task-type start-replication
+          else
+            echo "Task is already running or not in a startable state."
+          fi
     #   - name: Set today's date
     #     run: echo "TODAY=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
 

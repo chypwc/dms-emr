@@ -93,7 +93,7 @@ Resources:
       SourceEndpointArn: !Ref DmsPostgresSourceEndpoint
       TargetEndpointArn: !Ref DmsS3TargetEndpoint
       ReplicationInstanceArn: !Ref DmsReplicationInstance
-      MigrationType: full-load
+      MigrationType: full-load-and-cdc
       TableMappings:
         Fn::Sub: |
           {
