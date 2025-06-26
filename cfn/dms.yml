@@ -73,6 +73,7 @@ Resources:
     Properties:
       ReplicationInstanceIdentifier: dms-replication-instance
       ReplicationInstanceClass: dms.t3.medium
+      EngineVersion: 3.6.0
       AllocatedStorage: 100
       VpcSecurityGroupIds:
         - !Ref DMSSecurityGroup
