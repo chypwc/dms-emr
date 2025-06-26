@@ -38,8 +38,9 @@ Resources:
       DatabaseName: imba
       SslMode: none
       Port: 5432
-      SecretsManagerSecretId: !Ref PostgreSQLSecret
-      SecretsManagerAccessRoleArn: !ImportValue EMRDMSGlueExecutionRoleArn
+      PostgreSqlSettings:
+        SecretsManagerSecretId: !Ref PostgreSQLSecret
+        SecretsManagerAccessRoleArn: !ImportValue EMRDMSGlueExecutionRoleArn
 
   DmsReplicationSubnetGroup:
     Type: AWS::DMS::ReplicationSubnetGroup
