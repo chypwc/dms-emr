@@ -89,14 +89,17 @@ Resources:
           Value: dms-replication-instance
 
 Outputs:
-  ReplicationInstanceArn:
-    Description: DMS Replication Instance ARN
+  DmsReplicationInstance:
     Value: !Ref DmsReplicationInstance
+    Export:
+      Name: DmsReplicationInstance
 
-  SourceEndpointArn:
-    Description: DMS PostgreSQL Source Endpoint
+  DmsPostgresSourceEndpoint:
     Value: !Ref DmsPostgresSourceEndpoint
+    Export:
+      Name: DmsPostgresSourceEndpoint
 
-  TargetEndpointArn:
-    Description: DMS S3 Target Endpoint
+  DmsS3TargetEndpoint:
     Value: !Ref DmsS3TargetEndpoint
+    Export:
+      Name: DmsS3TargetEndpoint
