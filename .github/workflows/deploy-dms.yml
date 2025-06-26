@@ -93,6 +93,44 @@ jobs:
             PostgreSQLSecret=postgresql_dms
           capabilities: CAPABILITY_NAMED_IAM
 
+      - name: Extract DMS Endpoint and Instance ARNs from Stack Outputs
+        id: dms-arns
+        run: |
+          ENDPOINT_ARN=$(aws cloudformation describe-stacks \
+            --stack-name dms \
+            --query "Stacks[0].Outputs[?OutputKey=='SourceEndpointArn'].OutputValue" \
+            --output text)
+
+          INSTANCE_ARN=$(aws cloudformation describe-stacks \
+            --stack-name dms \
+            --query "Stacks[0].Outputs[?OutputKey=='ReplicationInstanceArn'].OutputValue" \
+            --output text)
+
+          echo "ENDPOINT_ARN=$ENDPOINT_ARN" >> $GITHUB_ENV
+          echo "INSTANCE_ARN=$INSTANCE_ARN" >> $GITHUB_ENV
+
+      - name: Test DMS Endpoint Connection
+        run: |
+          aws dms test-connection \
+            --replication-instance-arn ${{ env.INSTANCE_ARN }} \
+            --endpoint-arn ${{ env.ENDPOINT_ARN }}
+
+      - name: Wait for Test Result
+        run: |
+          aws dms describe-connections \
+            --filters "Name=endpoint-arn,Values=${{ env.ENDPOINT_ARN }}"
+
+      - name: Start DMS Replication Task
+        run: |
+          TASK_ARN=$(aws cloudformation describe-stacks \
+            --stack-name dms \
+            --query "Stacks[0].Outputs[?OutputKey=='ReplicationTaskArn'].OutputValue" \
+            --output text)
+
+          echo "Replication Task ARN: $TASK_ARN"
+          aws dms start-replication-task \
+            --replication-task-arn $TASK_ARN \
+            --start-replication-task-type start-replication
     #   - name: Set today's date
     #     run: echo "TODAY=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
 
