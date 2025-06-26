@@ -33,11 +33,11 @@ Resources:
         TerminationProtected: false
         MasterInstanceGroup:
           InstanceCount: 1
-          InstanceType: m5.large
+          InstanceType: m4.large
           Market: ON_DEMAND
         CoreInstanceGroup:
           InstanceCount: 2
-          InstanceType: m5.large
+          InstanceType: m4.large
           Market: ON_DEMAND
       JobFlowRole: !Ref EMRDMSInstanceProfile
       ServiceRole: !ImportValue EMRDMSGlueExecutionRoleArn
