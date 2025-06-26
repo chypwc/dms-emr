@@ -16,7 +16,7 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonS3FullAccess # Access to S3 (e.g., logs, data)
         - arn:aws:iam::aws:policy/AWSGlueConsoleFullAccess # Full Glue service access
-        - arn:aws:iam::aws:policy/AWSGlueServiceRole # Required for Glue jobs
+        - arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole # Required for Glue jobs
         - arn:aws:iam::aws:policy/service-role/AmazonDMSVPCManagementRole # Needed by DMS
         - arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceRole # EMR core service role
         - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess # Log writing access
