@@ -28,6 +28,10 @@ on:
         description: "Deploy S3 Buckets Stack?"
         required: true
         default: "false"
+      deployDMS:
+        description: "Deploy DMS?"
+        required: true
+        default: "false"
 
 jobs:
   cfn-deployment:
@@ -77,6 +81,7 @@ jobs:
 
       - name: Deploy DMS endpoints, instance, and task
         id: dms
+        if: ${{ github.event.inputs.deployDMS == 'true' }}
         uses: aws-actions/aws-cloudformation-github-deploy@v1.0.3
         with:
           name: dms

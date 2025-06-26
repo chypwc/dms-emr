@@ -2,6 +2,10 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: Create AWS DMS source (PostgreSQL), target (S3) endpoints, AWS DMS Replication Instance
 
 Parameters:
+  ExecutionRoleArn:
+    Type: String
+    Description: IAM Role ARN for DMS
+    Default: !ImportValue EMRDMSGlueExecutionRoleArn
   PostgreSQLSecret:
     Type: String
     Description: PostgreSQL Credential Name in Secret Manager
@@ -10,12 +14,10 @@ Parameters:
     Type: String
     Description: Imported VPC ID
     Default: !ImportValue Shared-VpcId
-
   Subnet1:
     Type: String
     Description: Private Subnet 1
     Default: !ImportValue Shared-PrivateSubnet1Id
-
   Subnet2:
     Type: String
     Description: Private Subnet 2
@@ -43,7 +45,7 @@ Resources:
       SslMode: none
       ExtraConnectionAttributes: ""
       KmsKeyId: ""
-      ServiceAccessRoleArn: !GetAtt EMRDMSGlueExecutionRole.Arn
+      ServiceAccessRoleArn: !Ref ExecutionRoleArn
 
   ## DMS PostgreSQL Source Endpoint using Secrets Manager ##
   DmsPostgresSourceEndpoint:
@@ -57,7 +59,7 @@ Resources:
       Port: 0
       DatabaseName: imba
       SslMode: none
-      SecretsManagerAccessRoleArn: !GetAtt EMRDMSGlueExecutionRole.Arn
+      SecretsManagerAccessRoleArn: !Ref ExecutionRoleArn
       SecretsManagerSecretId: !Ref PostgreSQLSecret
 
   DmsReplicationSubnetGroup:
