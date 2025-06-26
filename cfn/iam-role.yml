@@ -1,3 +1,9 @@
+Parameters:
+  PostgreSQLSecret:
+    Type: String
+    Description: PostgreSQL Credential Name in Secret Manager
+    Default: postgresql_dms
+
 Resources:
   EMRDMSGlueExecutionRole:
     Type: AWS::IAM::Role
@@ -28,7 +34,8 @@ Resources:
               - Effect: Allow
                 Action:
                   - secretsmanager:GetSecretValue
-                Resource: "*" # You can restrict to specific secret ARNs
+                  - secretsmanager:DescribeSecret
+                Resource: !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${PostgreSQLSecret}-*
       Tags:
         - Key: Name
           Value: EMR-DMS-Glue-ExecutionRole

@@ -57,6 +57,8 @@ jobs:
           name: iam-role
           template: cfn/iam-role.yml
           capabilities: CAPABILITY_NAMED_IAM
+          parameter-overrides: >-
+            PostgreSQLSecret=postgresql_dms
 
       - name: Deploy VPC CloudFormation Stack
         id: vpc-stack
