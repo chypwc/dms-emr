@@ -2,26 +2,10 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: Create AWS DMS source (PostgreSQL), target (S3) endpoints, AWS DMS Replication Instance
 
 Parameters:
-  ExecutionRoleArn:
-    Type: String
-    Description: IAM Role ARN for DMS
-    Default: !ImportValue EMRDMSGlueExecutionRoleArn
   PostgreSQLSecret:
     Type: String
     Description: PostgreSQL Credential Name in Secret Manager
     Default: postgresql_dms
-  VpcId:
-    Type: String
-    Description: Imported VPC ID
-    Default: !ImportValue Shared-VpcId
-  Subnet1:
-    Type: String
-    Description: Private Subnet 1
-    Default: !ImportValue Shared-PrivateSubnet1Id
-  Subnet2:
-    Type: String
-    Description: Private Subnet 2
-    Default: !ImportValue Shared-PrivateSubnet2Id
 
 Resources:
   ## DMS S3 Target Endpoint ##
@@ -45,7 +29,7 @@ Resources:
       SslMode: none
       ExtraConnectionAttributes: ""
       KmsKeyId: ""
-      ServiceAccessRoleArn: !Ref ExecutionRoleArn
+      ServiceAccessRoleArn: !ImportValue EMRDMSGlueExecutionRoleArn
 
   ## DMS PostgreSQL Source Endpoint using Secrets Manager ##
   DmsPostgresSourceEndpoint:
@@ -59,7 +43,7 @@ Resources:
       Port: 0
       DatabaseName: imba
       SslMode: none
-      SecretsManagerAccessRoleArn: !Ref ExecutionRoleArn
+      SecretsManagerAccessRoleArn: !ImportValue EMRDMSGlueExecutionRoleArn
       SecretsManagerSecretId: !Ref PostgreSQLSecret
 
   DmsReplicationSubnetGroup:
@@ -68,14 +52,14 @@ Resources:
       ReplicationSubnetGroupIdentifier: dms-subnet-group
       ReplicationSubnetGroupDescription: Subnet group for DMS replication instance
       SubnetIds:
-        - !Ref Subnet1
-        - !Ref Subnet2
+        - !ImportValue Shared-PrivateSubnet1Id
+        - !ImportValue Shared-PrivateSubnet2Id
 
   DMSSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow DMS access to PostgreSQL
-      VpcId: !Ref VpcId
+      VpcId: !ImportValue Shared-VpcId
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 5432
@@ -166,3 +150,19 @@ Resources:
               "EnableValidation": false
             }
           }
+Outputs:
+  ReplicationInstanceArn:
+    Description: DMS Replication Instance ARN
+    Value: !Ref DmsReplicationInstance
+
+  SourceEndpointArn:
+    Description: DMS PostgreSQL Source Endpoint
+    Value: !Ref DmsPostgresSourceEndpoint
+
+  TargetEndpointArn:
+    Description: DMS S3 Target Endpoint
+    Value: !Ref DmsS3TargetEndpoint
+
+  ReplicationTaskArn:
+    Description: DMS Replication Task
+    Value: !Ref DmsReplicationTask
