@@ -31,17 +31,15 @@ Resources:
         Ec2SubnetId: !ImportValue Shared-PrivateSubnet1Id
         KeepJobFlowAliveWhenNoSteps: false
         TerminationProtected: false
-        InstanceFleets:
-          - Name: MasterFleet
-            InstanceFleetType: MASTER
-            TargetOnDemandCapacity: 1
-            InstanceTypeConfigs:
-              - InstanceType: m5.large
-          - Name: CoreFleet
-            InstanceFleetType: CORE
-            TargetOnDemandCapacity: 1
-            InstanceTypeConfigs:
-              - InstanceType: m5.large
+        InstanceGroups:
+          - InstanceRole: MASTER
+            InstanceType: m5.large
+            InstanceCount: 1
+            Market: ON_DEMAND
+          - InstanceRole: CORE
+            InstanceType: m5.large
+            InstanceCount: 2
+            Market: ON_DEMAND
       JobFlowRole: !Ref EMRDMSInstanceProfile
       ServiceRole: !ImportValue EMRDMSGlueExecutionRoleArn
       VisibleToAllUsers: true # Makes the cluster visible to all IAM users in the account.
