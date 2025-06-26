@@ -21,7 +21,7 @@ Resources:
       S3Settings:
         BucketName: !Ref SourceBucketName
         BucketFolder: dms-input
-        CompressionType: NONE
+        CompressionType: GZIP
         CsvDelimiter: ","
         CsvRowDelimiter: "\n"
         DataFormat: csv
@@ -113,38 +113,54 @@ Resources:
       ReplicationTaskSettings:
         Fn::Sub: |
           {
-            "TargetMetadata": {
-              "TargetSchema": "",
-              "SupportLobs": false,
-              "FullLobMode": false,
-              "LimitedSizeLobMode": false,
-              "LobChunkSize": 0,
-              "LobMaxSize": 0,
-              "LoadMaxFileSize": 0,
-              "ParallelLoadThreads": 0,
-              "ParallelLoadBufferSize": 0,
-              "BatchApplyEnabled": false,
-              "TaskRecoveryTableEnabled": false
-            },
-            "FullLoadSettings": {
-              "TargetTablePrepMode": "DO_NOTHING",
-              "CreatePkAfterFullLoad": false,
-              "StopTaskCachedChangesApplied": false,
-              "StopTaskCachedChangesNotApplied": false,
-              "MaxFullLoadSubTasks": 8,
-              "TransactionConsistencyTimeout": 600,
-              "CommitRate": 10000
-            },
-            "Logging": {
-              "EnableLogging": true
-            },
-            "ControlTablesSettings": {
-              "historyTimeslotInMinutes": 5,
-              "controlSchema": "dms_control"
-            },
-            "ValidationSettings": {
-              "EnableValidation": false
-            }
+          "TargetMetadata": {
+            "ParallelLoadThreads": 2,
+            "ParallelLoadBufferSize": 50,
+            "ParallelApplyThreads": 2,
+            "ParallelApplyBufferSize": 50,
+            "BatchApplyEnabled": true
+          },
+          "FullLoadSettings": {
+            "MaxFullLoadSubTasks": 4,
+            "TransactionConsistencyTimeout": 600,
+            "CommitRate": 25000,
+            "CreatePkAfterFullLoad": false
+          },
+          "StreamBufferSettings": {
+            "StreamBufferCount": 4,
+            "StreamBufferSizeInMB": 16,
+            "CtrlStreamBufferSizeInMB": 5
+          },
+          "ChangeProcessingTuning": {
+            "BatchApplyPreserveTransaction": false,
+            "BatchApplyTimeoutMin": 1,
+            "BatchApplyTimeoutMax": 30,
+            "BatchApplyMemoryLimit": 200,
+            "BatchSplitSize": 10000,
+            "MinTransactionSize": 5000,
+            "CommitTimeout": 1,
+            "MemoryLimitTotal": 512,
+            "MemoryKeepTime": 60,
+            "StatementCacheSize": 50
+          },
+          "ErrorBehavior": {
+            "DataErrorPolicy": "LOG_ERROR",
+            "FullLoadIgnoreConflicts": true,
+            "RecoverableErrorCount": 5,
+            "RecoverableErrorInterval": 5
+          },
+          "Logging": {
+            "EnableLogging": true
+          },
+          "ControlTablesSettings": {
+            "historyTimeslotInMinutes": 5,
+            "controlSchema": "dms_control",
+            "HistoryTableEnabled": false,
+            "StatusTableEnabled": false
+          },
+          "ValidationSettings": {
+            "EnableValidation": false
+          }
           }
 Outputs:
   ReplicationInstanceArn:

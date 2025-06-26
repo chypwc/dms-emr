@@ -1,4 +1,4 @@
-name: Deploy DMS
+name: Deploy DMS and start task
 
 on:
   # Allows you to run this workflow manually from the Actions tab
@@ -159,16 +159,3 @@ jobs:
           else
             echo "Task is running or in an unknown state."
           fi
-    #   - name: Set today's date
-    #     run: echo "TODAY=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-
-    #   - name: Deploy EMR spark job
-    #     id: emr-spark
-    #     uses: aws-actions/aws-cloudformation-github-deploy@v1
-    #     with:
-    #       name: emr-spark
-    #       template: cfn/emr.yml
-    #       capabilities: CAPABILITY_NAMED_IAM
-    #       parameter-overrides: >-
-    #         ClusterName=emr-cluster-${{ env.TODAY }}
-    #         SourceBucketName=${{ github.event.inputs.SourceBucketName }}

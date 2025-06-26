@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Create EMR Cluster and run script
+
+Parameters:
+  ClusterName:
+    Type: String
+    Default: my-emr-cluster
+  SourceBucketName:
+    Description: Name the source or script Bucket
+    Type: String
+
+Resources:
+  EMRCluster:
+    Type: AWS::EMR::Cluster
+    Properties:
+      Name: !Ref ClusterName
+      ReleaseLabel: emr-7.6.0
+      Applications:
+        - Name: Hadoop
+        - Name: Spark
+      Instances:
+        MasterInstanceGroup:
+          InstanceCount: 1
+          InstanceType: m5.large
+          Market: ON_DEMAND
+        CoreInstanceGroup:
+          InstanceCount: 1
+          InstanceType: m5.large
+          Market: ON_DEMAND
+        Ec2KeyName: Macbook # replace with your key pair
+        KeepJobFlowAliveWhenNoSteps: false # Shut down the cluster automatically when all steps are done.
+        TerminationProtected: false # Allows the cluster to be terminated via the AWS console or CLI.
+      JobFlowRole: EMR_EC2_DefaultRole
+      ServiceRole: EMR_DefaultRole
+      VisibleToAllUsers: true  $ Makes the cluster visible to all IAM users in the account.
+      LogUri: !Sub s3://{SourceBucketName}/emr/ # Stores job logs (stdout, stderr, and step logs) in S3.
+      Steps:
+        - Name: Run PySpark Script
+          ActionOnFailure: TERMINATE_CLUSTER
+          HadoopJarStep:
+            Jar: command-runner.jar
+            Args:
+              - spark-submit
+              - !Sub s3://${SourceBucketName}/scripts/my_script.py # replace with your script path
+
+Outputs:
+  ClusterId:
+    Description: EMR Cluster ID
+    Value: !Ref EMRCluster

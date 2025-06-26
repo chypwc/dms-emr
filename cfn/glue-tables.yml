@@ -1,0 +1,187 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  DataBucket:
+    Type: String
+    Description: Bucket with CSV data files
+  DatabaseName:
+    Type: String
+    Default: imba-raw
+  DataFolder:
+    Type: String
+    Default: dms-input
+
+Resources:
+  GlueDatabase:
+    Type: AWS::Glue::Database
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseInput:
+        Name: !Ref DatabaseName
+        Description: Glue database for analytics data
+
+  DepartmentsTable:
+    Type: AWS::Glue::Table
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseName: !Ref DatabaseName
+      TableInput:
+        Name: departments
+        TableType: EXTERNAL_TABLE
+        Parameters: { "classification": "csv" }
+        StorageDescriptor:
+          Location: !Sub s3://${DataBucket}/${DataFolder}/departments/
+          InputFormat: org.apache.hadoop.mapred.TextInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+          Compressed: false
+          SerdeInfo:
+            SerializationLibrary: org.apache.hadoop.hive.serde2.OpenCSVSerde
+            Parameters:
+              { "separatorChar": ",", "escapeChar": "\\", "quoteChar": '"' }
+          Columns:
+            - Name: department_id
+              Type: int
+            - Name: department
+              Type: string
+
+  AislesTable:
+    Type: AWS::Glue::Table
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseName: !Ref DatabaseName
+      TableInput:
+        Name: aisles
+        TableType: EXTERNAL_TABLE
+        Parameters: { "classification": "csv" }
+        StorageDescriptor:
+          Location: !Sub s3://${DataBucket}/${DataFolder}/aisles/
+          InputFormat: org.apache.hadoop.mapred.TextInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+          Compressed: false
+          SerdeInfo:
+            SerializationLibrary: org.apache.hadoop.hive.serde2.OpenCSVSerde
+            Parameters:
+              { "separatorChar": ",", "escapeChar": "\\", "quoteChar": '"' }
+          Columns:
+            - Name: aisle_id
+              Type: int
+            - Name: aisle
+              Type: string
+
+  ProductsTable:
+    Type: AWS::Glue::Table
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseName: !Ref DatabaseName
+      TableInput:
+        Name: products
+        TableType: EXTERNAL_TABLE
+        Parameters: { "classification": "csv" }
+        StorageDescriptor:
+          Location: !Sub s3://${DataBucket}/${DataFolder}/products/
+          InputFormat: org.apache.hadoop.mapred.TextInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+          Compressed: false
+          SerdeInfo:
+            SerializationLibrary: org.apache.hadoop.hive.serde2.OpenCSVSerde
+            Parameters:
+              { "separatorChar": ",", "escapeChar": "\\", "quoteChar": '"' }
+          Columns:
+            - Name: product_id
+              Type: int
+            - Name: product_name
+              Type: string
+            - Name: aisle_id
+              Type: int
+            - Name: department_id
+              Type: int
+
+  OrdersTable:
+    Type: AWS::Glue::Table
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseName: !Ref DatabaseName
+      TableInput:
+        Name: orders
+        TableType: EXTERNAL_TABLE
+        Parameters: { "classification": "csv" }
+        StorageDescriptor:
+          Location: !Sub s3://${DataBucket}/${DataFolder}/orders/
+          InputFormat: org.apache.hadoop.mapred.TextInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+          Compressed: false
+          SerdeInfo:
+            SerializationLibrary: org.apache.hadoop.hive.serde2.OpenCSVSerde
+            Parameters:
+              { "separatorChar": ",", "escapeChar": "\\", "quoteChar": '"' }
+          Columns:
+            - Name: order_id
+              Type: int
+            - Name: user_id
+              Type: int
+            - Name: eval_set
+              Type: string
+            - Name: order_number
+              Type: int
+            - Name: order_dow
+              Type: int
+            - Name: order_hour_of_day
+              Type: int
+            - Name: days_since_prior
+              Type: int
+
+  OrderProductsTrainTable:
+    Type: AWS::Glue::Table
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseName: !Ref DatabaseName
+      TableInput:
+        Name: order_products__train
+        TableType: EXTERNAL_TABLE
+        Parameters: { "classification": "csv" }
+        StorageDescriptor:
+          Location: !Sub s3://${DataBucket}/${DataFolder}/order_products__train/
+          InputFormat: org.apache.hadoop.mapred.TextInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+          Compressed: false
+          SerdeInfo:
+            SerializationLibrary: org.apache.hadoop.hive.serde2.OpenCSVSerde
+            Parameters:
+              { "separatorChar": ",", "escapeChar": "\\", "quoteChar": '"' }
+          Columns:
+            - Name: order_id
+              Type: int
+            - Name: product_id
+              Type: int
+            - Name: add_to_cart_order
+              Type: string
+            - Name: reordered
+              Type: boolean
+
+  OrderProductsPriorTable:
+    Type: AWS::Glue::Table
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseName: !Ref DatabaseName
+      TableInput:
+        Name: order_products__prior
+        TableType: EXTERNAL_TABLE
+        Parameters: { "classification": "csv" }
+        StorageDescriptor:
+          Location: !Sub s3://${DataBucket}/${DataFolder}/order_products__prior/
+          InputFormat: org.apache.hadoop.mapred.TextInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+          Compressed: false
+          SerdeInfo:
+            SerializationLibrary: org.apache.hadoop.hive.serde2.OpenCSVSerde
+            Parameters:
+              { "separatorChar": ",", "escapeChar": "\\", "quoteChar": '"' }
+          Columns:
+            - Name: order_id
+              Type: int
+            - Name: product_id
+              Type: int
+            - Name: add_to_cart_order
+              Type: string
+            - Name: reordered
+              Type: boolean
