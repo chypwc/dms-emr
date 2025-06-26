@@ -10,92 +10,13 @@ Parameters:
     Type: String
 
 Resources:
-  # EMR EC2 Instance Profile Role
-  EMRInstanceProfileRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: EMR-EC2-InstanceProfile-Role
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: ec2.amazonaws.com
-            Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceforEC2Role
-      Policies:
-        - PolicyName: GlueAndS3Access
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              # Glue Catalog permissions
-              - Effect: Allow
-                Action:
-                  - glue:GetDatabase
-                  - glue:GetDatabases
-                  - glue:GetTable
-                  - glue:GetTables
-                  - glue:GetPartition
-                  - glue:GetPartitions
-                  - glue:CreateTable
-                  - glue:UpdateTable
-                  - glue:DeleteTable
-                  - glue:CreateDatabase
-                  - glue:UpdateDatabase
-                  - glue:DeleteDatabase
-                  - glue:CreatePartition
-                  - glue:UpdatePartition
-                  - glue:DeletePartition
-                  - glue:BatchCreatePartition
-                  - glue:BatchDeletePartition
-                  - glue:BatchUpdatePartition
-                Resource: "*"
-              # S3 permissions for your bucket
-              - Effect: Allow
-                Action:
-                  - s3:GetObject
-                  - s3:GetObjectVersion
-                  - s3:PutObject
-                  - s3:DeleteObject
-                  - s3:ListBucket
-                  - s3:ListBucketMultipartUploads
-                  - s3:AbortMultipartUpload
-                  - s3:ListMultipartUploadParts
-                Resource:
-                  - !Sub "${SourceBucketName}"
-                  - !Sub "${SourceBucketName}/*"
-              # CloudWatch Logs permissions
-              - Effect: Allow
-                Action:
-                  - logs:CreateLogGroup
-                  - logs:CreateLogStream
-                  - logs:PutLogEvents
-                  - logs:DescribeLogStreams
-                Resource: "*"
-
   # Instance Profile for EMR EC2 instances
-  EMRInstanceProfile:
+  EMRDMSInstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
-      InstanceProfileName: EMR-EC2-InstanceProfile
+      InstanceProfileName: EMRDMSInstanceProfile
       Roles:
-        - !Ref EMRInstanceProfileRole
-
-  # EMR Service Role
-  EMRServiceRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: EMR-Service-Role
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: elasticmapreduce.amazonaws.com
-            Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceRole
+        - !ImportValue EMRDMSGlueExecutionRoleName
 
   EMRCluster:
     Type: AWS::EMR::Cluster
@@ -117,8 +38,8 @@ Resources:
         Ec2KeyName: Macbook # replace with your key pair
         KeepJobFlowAliveWhenNoSteps: false # Shut down the cluster automatically when all steps are done.
         TerminationProtected: false # Allows the cluster to be terminated via the AWS console or CLI.
-      JobFlowRole: !Ref EMRInstanceProfile
-      ServiceRole: !Ref EMRServiceRole
+      JobFlowRole: !Ref EMRDMSInstanceProfile
+      ServiceRole: !ImportValue EMRDMSGlueExecutionRoleArn
       VisibleToAllUsers: true # Makes the cluster visible to all IAM users in the account.
       LogUri: !Sub s3://${SourceBucketName}/emr/ # Stores job logs (stdout, stderr, and step logs) in S3.
       Configurations:
@@ -135,7 +56,7 @@ Resources:
             Jar: command-runner.jar
             Args:
               - spark-submit
-              - !Sub s3://${SourceBucketName}/scripts/my_script.py # replace with your script path
+              - !Sub s3://${SourceBucketName}/scripts/features.py # replace with your script path
 
 Outputs:
   ClusterId:

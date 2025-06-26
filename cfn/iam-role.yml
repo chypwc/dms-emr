@@ -40,6 +40,10 @@ Resources:
         - Key: Name
           Value: EMR-DMS-Glue-ExecutionRole
 Outputs:
+   EMRDMSGlueExecutionRoleName:
+    Value: !Ref EMRDMSGlueExecutionRole
+    Export:
+      Name: EMRDMSGlueExecutionRoleName
   EMRDMSGlueExecutionRoleArn:
     Description: ARN of EMR-DMS-Glue Execution Role
     Value: !GetAtt EMRDMSGlueExecutionRole.Arn
