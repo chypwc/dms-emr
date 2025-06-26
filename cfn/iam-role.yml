@@ -15,6 +15,7 @@ Resources:
           - Effect: Allow
             Principal:
               Service:
+                - ec2.amazonaws.com     
                 - elasticmapreduce.amazonaws.com
                 - !Sub dms.${AWS::Region}.amazonaws.com
                 - glue.amazonaws.com
