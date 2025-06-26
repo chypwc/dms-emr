@@ -27,27 +27,31 @@ Resources:
         - Name: Spark
         - Name: Hive
       Instances:
-        MasterInstanceGroup:
-          InstanceCount: 1
-          InstanceType: m5.large
-          Market: ON_DEMAND
-        CoreInstanceGroup:
-          InstanceCount: 1
-          InstanceType: m5.large
-          Market: ON_DEMAND
-        Ec2KeyName: Macbook # replace with your key pair
-        KeepJobFlowAliveWhenNoSteps: false # Shut down the cluster automatically when all steps are done.
-        TerminationProtected: false # Allows the cluster to be terminated via the AWS console or CLI.
+        Ec2KeyName: Macbook
+        Ec2SubnetId: !ImportValue Shared-PrivateSubnet1Id
+        KeepJobFlowAliveWhenNoSteps: false
+        TerminationProtected: false
+        InstanceGroups:
+          - Name: Master
+            Market: ON_DEMAND
+            InstanceRole: MASTER
+            InstanceType: m5.large
+            InstanceCount: 1
+          - Name: Core
+            Market: ON_DEMAND
+            InstanceRole: CORE
+            InstanceType: m5.large
+            InstanceCount: 1
       JobFlowRole: !Ref EMRDMSInstanceProfile
       ServiceRole: !ImportValue EMRDMSGlueExecutionRoleArn
       VisibleToAllUsers: true # Makes the cluster visible to all IAM users in the account.
       LogUri: !Sub s3://${SourceBucketName}/emr/ # Stores job logs (stdout, stderr, and step logs) in S3.
       Configurations:
         - Classification: hive-site
-          Properties:
+          ConfigurationProperties:
             hive.metastore.client.factory.class: com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory
         - Classification: spark-hive-site
-          Properties:
+          ConfigurationProperties:
             hive.metastore.client.factory.class: com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory
       Steps:
         - Name: Run PySpark Script
