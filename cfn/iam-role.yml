@@ -31,11 +31,35 @@ Resources:
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
-              - Effect: Allow
+              - Sid: SecretAccess
+                Effect: Allow
                 Action:
                   - secretsmanager:GetSecretValue
                   - secretsmanager:DescribeSecret
                 Resource: !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${PostgreSQLSecret}-*
+              - Sid: GlueDataCatalog
+                Effect: Allow
+                Action:
+                  - glue:GetDatabase
+                  - glue:GetDatabases
+                  - glue:GetTable
+                  - glue:GetTables
+                  - glue:GetPartition
+                  - glue:GetPartitions
+                  - glue:GetSchemaVersion
+                Resource: "*"
+              - Sid: AthenaSupport
+                Effect: Allow
+                Action:
+                  - athena:GetQueryExecution
+                  - athena:GetWorkGroup
+                Resource: "*"
+              - Sid: LakeFormationSupport
+                Effect: Allow
+                Action:
+                  - lakeformation:GetDataAccess
+                Resource: "*"
+      Tags:
       Tags:
         - Key: Name
           Value: EMR-DMS-Glue-ExecutionRole
