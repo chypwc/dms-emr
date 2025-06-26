@@ -132,13 +132,13 @@ jobs:
         run: |
           echo "Testing connection..."
           aws dms test-connection \
-            --replication-instance-arn ${{ env.INSTANCE_ARN }} \
-            --endpoint-arn ${{ env.ENDPOINT_ARN }}
+            --replication-instance-arn "$INSTANCE_ARN" \
+            --endpoint-arn "$ENDPOINT_ARN"
 
           echo "Waiting for successful connection..."
           for i in {1..10}; do
             STATUS=$(aws dms describe-connections \
-              --filters "Name=endpoint-arn,Values=${{ env.ENDPOINT_ARN }}" \
+              --filters "Name=endpoint-arn,Values=$ENDPOINT_ARN" \
               --query "Connections[0].Status" \
               --output text)
 
@@ -154,7 +154,7 @@ jobs:
 
           echo "Checking task status..."
           TASK_STATUS=$(aws dms describe-replication-tasks \
-            --filters "Name=replication-task-arn,Values=${{ env.TASK_ARN }}" \
+            --filters "Name=replication-task-arn,Values=$TASK_ARN" \
             --query "ReplicationTasks[0].Status" \
             --output text)
 
@@ -162,12 +162,12 @@ jobs:
           if [ "$TASK_STATUS" = "stopped" ]; then
             echo "Resuming task..."
             aws dms start-replication-task \
-              --replication-task-arn ${{ env.TASK_ARN }} \
+              --replication-task-arn "$TASK_ARN" \
               --start-replication-task-type resume-processing
           elif [ "$TASK_STATUS" = "ready" ] || [ "$TASK_STATUS" = "failed" ]; then
             echo "Starting task fresh..."
             aws dms start-replication-task \
-              --replication-task-arn ${{ env.TASK_ARN }} \
+              --replication-task-arn "$TASK_ARN" \
               --start-replication-task-type start-replication
           else
             echo "Task is running or in an unknown state."
