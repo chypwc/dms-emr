@@ -111,12 +111,12 @@ jobs:
         run: |
           ENDPOINT_ARN=$(aws cloudformation describe-stacks \
             --stack-name dms \
-            --query "Stacks[0].Outputs[?OutputKey=='SourceEndpointArn'].OutputValue" \
+            --query "Stacks[0].Outputs[?OutputKey=='DmsPostgresSourceEndpoint'].OutputValue" \
             --output text)
 
           INSTANCE_ARN=$(aws cloudformation describe-stacks \
             --stack-name dms \
-            --query "Stacks[0].Outputs[?OutputKey=='ReplicationInstanceArn'].OutputValue" \
+            --query "Stacks[0].Outputs[?OutputKey=='DmsReplicationInstance'].OutputValue" \
             --output text)
 
           TASK_ARN=$(aws cloudformation describe-stacks \
