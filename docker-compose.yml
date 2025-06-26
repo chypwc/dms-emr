@@ -13,8 +13,10 @@ services:
       - "0.0.0.0:5432:5432" # explicitly expose to all network interfaces. Expose PostgreSQL Publicly
     volumes:
       - pg_data:/var/lib/postgresql/data
-      - ./init:/docker-entrypoint-initdb.d # << auto-run SQL scripts
-      - ./data:/data # << your CSVs go here
+      - ./config/pg_hba.conf:/etc/postgresql/custom-pg_hba.conf
+      - ./config/postgresql.conf:/etc/postgresql/custom-postgresql.conf
+      - ./init:/docker-entrypoint-initdb.d
+      - ./data:/data
 
   pgadmin:
     image: dpage/pgadmin4

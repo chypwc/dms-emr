@@ -25,6 +25,8 @@ Resources:
         CsvDelimiter: ","
         CsvRowDelimiter: "\n"
         DataFormat: csv
+        EnableStatistics: false
+        MaxFileSize: 65536 # ~64MB per file
         DatePartitionEnabled: false
         ServiceAccessRoleArn: !ImportValue EMRDMSGlueExecutionRoleArn
 
@@ -74,7 +76,7 @@ Resources:
       - DMSSecurityGroup
     Properties:
       ReplicationInstanceIdentifier: dms-replication-instance
-      ReplicationInstanceClass: dms.t3.medium
+      ReplicationInstanceClass: dms.c5.xlarge
       EngineVersion: 3.6.0
       AllocatedStorage: 100
       VpcSecurityGroupIds:
@@ -116,16 +118,16 @@ Resources:
         Fn::Sub: |
           {
           "FullLoadSettings": {
-            "MaxFullLoadSubTasks": 4,
+            "MaxFullLoadSubTasks": 8,
             "TransactionConsistencyTimeout": 600,
-            "CommitRate": 25000,
+            "CommitRate": 50000,
             "CreatePkAfterFullLoad": false,
             "TargetTablePrepMode": "DO_NOTHING"
           },
           "StreamBufferSettings": {
-            "StreamBufferCount": 4,
-            "StreamBufferSizeInMB": 16,
-            "CtrlStreamBufferSizeInMB": 5
+            "StreamBufferCount": 8,
+            "StreamBufferSizeInMB": 32,
+            "CtrlStreamBufferSizeInMB": 10
           },
           "ErrorBehavior": {
             "DataErrorPolicy": "LOG_ERROR",
