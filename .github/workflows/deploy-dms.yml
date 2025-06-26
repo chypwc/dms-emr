@@ -106,74 +106,79 @@ jobs:
           template: cfn/dms-task.yml
           capabilities: CAPABILITY_NAMED_IAM
 
-      - name: Extract DMS Endpoint, Instance, and Task ARNs
-        id: dms-arns
+      - name: Run DMS task
         run: |
-          ENDPOINT_ARN=$(aws cloudformation describe-stacks \
-            --stack-name dms \
-            --query "Stacks[0].Outputs[?OutputKey=='DmsPostgresSourceEndpoint'].OutputValue" \
-            --output text)
+          shell-scripts/run-dms-task.sh DmsTaskSmallTablesArn
+          shell-scripts/run-dms-task.sh DmsTaskLargeTableArn
 
-          INSTANCE_ARN=$(aws cloudformation describe-stacks \
-            --stack-name dms \
-            --query "Stacks[0].Outputs[?OutputKey=='DmsReplicationInstance'].OutputValue" \
-            --output text)
+      # - name: Extract DMS Endpoint, Instance, and Task ARNs
+      #   id: dms-arns
+      #   run: |
+      #     ENDPOINT_ARN=$(aws cloudformation describe-stacks \
+      #       --stack-name dms \
+      #       --query "Stacks[0].Outputs[?OutputKey=='DmsPostgresSourceEndpoint'].OutputValue" \
+      #       --output text)
 
-          TASK_ARN=$(aws cloudformation describe-stacks \
-            --stack-name dms-task \
-            --query "Stacks[0].Outputs[?OutputKey=='ReplicationTaskArn'].OutputValue" \
-            --output text)
+      #     INSTANCE_ARN=$(aws cloudformation describe-stacks \
+      #       --stack-name dms \
+      #       --query "Stacks[0].Outputs[?OutputKey=='DmsReplicationInstance'].OutputValue" \
+      #       --output text)
 
-          echo "Extracted ARNs:"
-          echo "ENDPOINT_ARN=$ENDPOINT_ARN"
-          echo "INSTANCE_ARN=$INSTANCE_ARN"
-          echo "TASK_ARN=$TASK_ARN"
+      #     TASK_ARN=$(aws cloudformation describe-stacks \
+      #       --stack-name dms-task \
+      #       --query "Stacks[0].Outputs[?OutputKey=='DmsTaskSmallTablesArn'].OutputValue" \
+      #       --output text)
 
-          echo "ENDPOINT_ARN=$ENDPOINT_ARN" >> $GITHUB_ENV
-          echo "INSTANCE_ARN=$INSTANCE_ARN" >> $GITHUB_ENV
-          echo "TASK_ARN=$TASK_ARN" >> $GITHUB_ENV
+      #     echo "Extracted ARNs:"
+      #     echo "ENDPOINT_ARN=$ENDPOINT_ARN"
+      #     echo "INSTANCE_ARN=$INSTANCE_ARN"
+      #     echo "TASK_ARN=$TASK_ARN"
 
-      - name: Test and Start DMS Task
-        run: |
-          echo "Testing connection..."
-          aws dms test-connection \
-            --replication-instance-arn "$INSTANCE_ARN" \
-            --endpoint-arn "$ENDPOINT_ARN"
+      #     echo "ENDPOINT_ARN=$ENDPOINT_ARN" >> $GITHUB_ENV
+      #     echo "INSTANCE_ARN=$INSTANCE_ARN" >> $GITHUB_ENV
+      #     echo "TASK_ARN=$TASK_ARN" >> $GITHUB_ENV
 
-          echo "Waiting for successful connection..."
-          for i in {1..10}; do
-            STATUS=$(aws dms describe-connections \
-              --filters "Name=endpoint-arn,Values=$ENDPOINT_ARN" \
-              --query "Connections[0].Status" \
-              --output text)
+      # - name: Test and Start DMS Task
+      #   run: |
+      #     echo "Testing connection..."
+      #     aws dms test-connection \
+      #       --replication-instance-arn "$INSTANCE_ARN" \
+      #       --endpoint-arn "$ENDPOINT_ARN"
 
-            echo "Connection status: $STATUS"
-            if [ "$STATUS" = "successful" ]; then
-              break
-            elif [ "$i" -eq 10 ]; then
-              echo "Connection not successful after retries."
-              exit 1
-            fi
-            sleep 10
-          done
+      #     echo "Waiting for successful connection..."
+      #     for i in {1..10}; do
+      #       STATUS=$(aws dms describe-connections \
+      #         --filters "Name=endpoint-arn,Values=$ENDPOINT_ARN" \
+      #         --query "Connections[0].Status" \
+      #         --output text)
 
-          echo "Checking task status..."
-          TASK_STATUS=$(aws dms describe-replication-tasks \
-            --filters "Name=replication-task-arn,Values=$TASK_ARN" \
-            --query "ReplicationTasks[0].Status" \
-            --output text)
+      #       echo "Connection status: $STATUS"
+      #       if [ "$STATUS" = "successful" ]; then
+      #         break
+      #       elif [ "$i" -eq 10 ]; then
+      #         echo "Connection not successful after retries."
+      #         exit 1
+      #       fi
+      #       sleep 10
+      #     done
 
-          echo "Current task status: $TASK_STATUS"
-          if [ "$TASK_STATUS" = "stopped" ]; then
-            echo "Resuming task..."
-            aws dms start-replication-task \
-              --replication-task-arn "$TASK_ARN" \
-              --start-replication-task-type resume-processing
-          elif [ "$TASK_STATUS" = "ready" ] || [ "$TASK_STATUS" = "failed" ]; then
-            echo "Starting task fresh..."
-            aws dms start-replication-task \
-              --replication-task-arn "$TASK_ARN" \
-              --start-replication-task-type start-replication
-          else
-            echo "Task is running or in an unknown state."
-          fi
+      #     echo "Checking task status..."
+      #     TASK_STATUS=$(aws dms describe-replication-tasks \
+      #       --filters "Name=replication-task-arn,Values=$TASK_ARN" \
+      #       --query "ReplicationTasks[0].Status" \
+      #       --output text)
+
+      #     echo "Current task status: $TASK_STATUS"
+      #     if [ "$TASK_STATUS" = "stopped" ]; then
+      #       echo "Resuming task..."
+      #       aws dms start-replication-task \
+      #         --replication-task-arn "$TASK_ARN" \
+      #         --start-replication-task-type resume-processing
+      #     elif [ "$TASK_STATUS" = "ready" ] || [ "$TASK_STATUS" = "failed" ]; then
+      #       echo "Starting task fresh..."
+      #       aws dms start-replication-task \
+      #         --replication-task-arn "$TASK_ARN" \
+      #         --start-replication-task-type start-replication
+      #     else
+      #       echo "Task is running or in an unknown state."
+      #     fi

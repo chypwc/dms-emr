@@ -1,12 +1,12 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Create AWS DMS source (PostgreSQL), target (S3) endpoints, AWS DMS Replication Instance
+Description: Create AWS DMS tasks to split workload between large and small tables
 
 Resources:
-  ## DMS Replication Task ##
-  DmsReplicationTask:
+  ## Task 1: All tables except `order_products__prior`
+  DmsTaskSmallTables:
     Type: AWS::DMS::ReplicationTask
     Properties:
-      ReplicationTaskIdentifier: dms-postgres-to-s3-task
+      ReplicationTaskIdentifier: dms-small-tables
       SourceEndpointArn: !ImportValue DmsPostgresSourceEndpoint
       TargetEndpointArn: !ImportValue DmsS3TargetEndpoint
       ReplicationInstanceArn: !ImportValue DmsReplicationInstance
@@ -17,11 +17,11 @@ Resources:
             "rules": [
               {
                 "rule-type": "selection",
-                "rule-id": "1",
-                "rule-name": "1",
+                "rule-id": "small-tables",
+                "rule-name": "small-tables",
                 "object-locator": {
                   "schema-name": "public",
-                  "table-name": "%"
+                  "table-name": "^(?!order_products__prior$).*"
                 },
                 "rule-action": "include"
               }
@@ -30,41 +30,115 @@ Resources:
       ReplicationTaskSettings:
         Fn::Sub: |
           {
-          "FullLoadSettings": {
-            "MaxFullLoadSubTasks": 8,
-            "TransactionConsistencyTimeout": 600,
-            "CommitRate": 50000,
-            "CreatePkAfterFullLoad": false,
-            "TargetTablePrepMode": "DO_NOTHING"
-          },
-          "StreamBufferSettings": {
-            "StreamBufferCount": 8,
-            "StreamBufferSizeInMB": 32,
-            "CtrlStreamBufferSizeInMB": 5
-          },
-          "ErrorBehavior": {
-            "DataErrorPolicy": "LOG_ERROR",
-            "FullLoadIgnoreConflicts": true,
-            "RecoverableErrorCount": 5,
-            "RecoverableErrorInterval": 5,
-            "DataErrorEscalationPolicy": "SUSPEND_TABLE",
-            "TableErrorPolicy": "SUSPEND_TABLE"
-          },
-          "Logging": {
-            "EnableLogging": true
-          },
-          "ControlTablesSettings": {
-            "historyTimeslotInMinutes": 5,
-            "controlSchema": "dms_control",
-            "HistoryTableEnabled": false,
-            "StatusTableEnabled": false
-          },
-          "ValidationSettings": {
-            "EnableValidation": false
+            "FullLoadSettings": {
+              "MaxFullLoadSubTasks": 16,
+              "TransactionConsistencyTimeout": 600,
+              "CommitRate": 100000,
+              "CreatePkAfterFullLoad": false,
+              "TargetTablePrepMode": "DO_NOTHING"
+            },
+            "StreamBufferSettings": {
+              "StreamBufferCount": 8,
+              "StreamBufferSizeInMB": 32,
+              "CtrlStreamBufferSizeInMB": 5
+            },
+            "ErrorBehavior": {
+              "DataErrorPolicy": "LOG_ERROR",
+              "FullLoadIgnoreConflicts": true,
+              "RecoverableErrorCount": 5,
+              "RecoverableErrorInterval": 5,
+              "DataErrorEscalationPolicy": "SUSPEND_TABLE",
+              "TableErrorPolicy": "SUSPEND_TABLE"
+            },
+            "Logging": {
+              "EnableLogging": true,
+              "LogComponents": [
+                {"Id": "SOURCE_UNLOAD", "Severity": "LOGGER_SEVERITY_DEFAULT"},
+                {"Id": "TARGET_LOAD", "Severity": "LOGGER_SEVERITY_DEFAULT"}
+              ]
+            },
+            "ControlTablesSettings": {
+              "historyTimeslotInMinutes": 5,
+              "controlSchema": "dms_control",
+              "HistoryTableEnabled": false,
+              "StatusTableEnabled": false
+            },
+            "ValidationSettings": { "EnableValidation": false }
           }
+
+  ## Task 2: Only `order_products__prior`
+  DmsTaskLargeTable:
+    Type: AWS::DMS::ReplicationTask
+    Properties:
+      ReplicationTaskIdentifier: dms-large-table
+      SourceEndpointArn: !ImportValue DmsPostgresSourceEndpoint
+      TargetEndpointArn: !ImportValue DmsS3TargetEndpoint
+      ReplicationInstanceArn: !ImportValue DmsReplicationInstance
+      MigrationType: full-load
+      TableMappings:
+        Fn::Sub: |
+          {
+            "rules": [
+              {
+                "rule-type": "selection",
+                "rule-id": "large-table",
+                "rule-name": "large-table",
+                "object-locator": {
+                  "schema-name": "public",
+                  "table-name": "order_products__prior"
+                },
+                "rule-action": "include"
+              }
+            ]
+          }
+      ReplicationTaskSettings:
+        Fn::Sub: |
+          {
+            "FullLoadSettings": {
+              "MaxFullLoadSubTasks": 16,
+              "TransactionConsistencyTimeout": 600,
+              "CommitRate": 100000,
+              "CreatePkAfterFullLoad": false,
+              "TargetTablePrepMode": "DO_NOTHING"
+            },
+            "StreamBufferSettings": {
+              "StreamBufferCount": 8,
+              "StreamBufferSizeInMB": 32,
+              "CtrlStreamBufferSizeInMB": 5
+            },
+            "ErrorBehavior": {
+              "DataErrorPolicy": "LOG_ERROR",
+              "FullLoadIgnoreConflicts": true,
+              "RecoverableErrorCount": 5,
+              "RecoverableErrorInterval": 5,
+              "DataErrorEscalationPolicy": "SUSPEND_TABLE",
+              "TableErrorPolicy": "SUSPEND_TABLE"
+            },
+            "Logging": {
+              "EnableLogging": true,
+              "LogComponents": [
+                {"Id": "SOURCE_UNLOAD", "Severity": "LOGGER_SEVERITY_DEFAULT"},
+                {"Id": "TARGET_LOAD", "Severity": "LOGGER_SEVERITY_DEFAULT"}
+              ]
+            },
+            "ControlTablesSettings": {
+              "historyTimeslotInMinutes": 5,
+              "controlSchema": "dms_control",
+              "HistoryTableEnabled": false,
+              "StatusTableEnabled": false
+            },
+            "ValidationSettings": { "EnableValidation": false }
           }
 
 Outputs:
-  ReplicationTaskArn:
-    Description: DMS Replication Task
-    Value: !Ref DmsReplicationTask
+  DmsTaskSmallTablesArn:
+    Description: DMS Task for small tables
+    Value: !Ref DmsTaskSmallTables
+    Export:
+      Name: DmsTaskSmallTablesArn
+
+  DmsTaskLargeTableArn:
+    Description: DMS Task for the large table
+    Value: !Ref DmsTaskLargeTable
+    Export:
+      Name: DmsTaskLargeTableArn

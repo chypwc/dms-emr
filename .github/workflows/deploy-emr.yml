@@ -31,6 +31,18 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ github.event.inputs.region }}
 
+      - name: Deploy Glue tables
+        id: glue-tables
+        uses: aws-actions/aws-cloudformation-github-deploy@v1.0.3
+        with:
+          name: glue-tables
+          template: cfn/glue-tables.yml
+          capabilities: CAPABILITY_NAMED_IAM
+          parameter-overrides: >-
+            DataBucket=SourceBucketName=${{ github.event.inputs.SourceBucketName }},
+            DataFolder=dms-input,
+            DatabasesName=imba-raw
+
       - name: Upload Spark Script
         run: |
           aws s3 cp scripts/ s3://${{ github.event.inputs.SourceBucketName }}/scripts/ --recursive

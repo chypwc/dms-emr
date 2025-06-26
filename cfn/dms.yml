@@ -20,13 +20,16 @@ Resources:
       EngineName: s3
       S3Settings:
         BucketName: !Ref SourceBucketName
-        BucketFolder: dms-input
-        CompressionType: GZIP
-        CsvDelimiter: ","
-        CsvRowDelimiter: "\n"
-        DataFormat: csv
+        BucketFolder: imba-raw-csv
+        # CompressionType: GZIP
+        # CsvDelimiter: ","
+        # CsvRowDelimiter: "\n"
+        # DataFormat: csv
+        DataFormat: parquet
+        CompressionType: parquet
+        ParquetVersion: parquet-1-0
         EnableStatistics: false
-        MaxFileSize: 65536 # ~64MB per file
+        MaxFileSize: 128000
         DatePartitionEnabled: false
         ServiceAccessRoleArn: !ImportValue EMRDMSGlueExecutionRoleArn
 

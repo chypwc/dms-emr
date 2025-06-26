@@ -17,6 +17,8 @@ services:
       - ./config/postgresql.conf:/etc/postgresql/custom-postgresql.conf
       - ./init:/docker-entrypoint-initdb.d
       - ./data:/data
+    command: >
+      postgres -c config_file=/etc/postgresql/custom-postgresql.conf
 
   pgadmin:
     image: dpage/pgadmin4
