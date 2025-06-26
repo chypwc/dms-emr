@@ -52,7 +52,7 @@ Resources:
             hive.metastore.client.factory.class: com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory
       Steps:
         - Name: Run PySpark Script
-          ActionOnFailure: TERMINATE_CLUSTER
+          ActionOnFailure: CANCEL_AND_WAIT # or CONTINUE
           HadoopJarStep:
             Jar: command-runner.jar
             Args:
