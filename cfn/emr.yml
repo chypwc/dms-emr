@@ -22,7 +22,7 @@ Resources:
     Type: AWS::EMR::Cluster
     Properties:
       Name: !Ref ClusterName
-      ReleaseLabel: emr-7.6.0
+      ReleaseLabel: emr-6.15.0
       Applications:
         - Name: Spark
         - Name: Hive
