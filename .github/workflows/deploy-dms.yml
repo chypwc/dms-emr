@@ -10,7 +10,7 @@ on:
         default: "ap-southeast-2"
       SourceBucketName:
         description: "S3 Source Bucket Name"
-        default: "imba-chien"
+        default: "source-bucket-chien"
         required: true
       DataBucketName:
         description: "S3 Data Bucket Name"
