@@ -8,8 +8,8 @@ Resources:
     Properties:
       ReplicationTaskIdentifier: dms-postgres-to-s3-task
       SourceEndpointArn: !ImportValue DmsPostgresSourceEndpoint
-      TargetEndpointArn: !ImportValu DmsS3TargetEndpoint
-      ReplicationInstanceArn: !ImportValu DmsReplicationInstance
+      TargetEndpointArn: !ImportValue DmsS3TargetEndpoint
+      ReplicationInstanceArn: !ImportValue DmsReplicationInstance
       MigrationType: full-load
       TableMappings:
         Fn::Sub: |
