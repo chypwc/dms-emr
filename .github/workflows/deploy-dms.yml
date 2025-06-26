@@ -124,6 +124,11 @@ jobs:
             --query "Stacks[0].Outputs[?OutputKey=='ReplicationTaskArn'].OutputValue" \
             --output text)
 
+          echo "Extracted ARNs:"
+          echo "ENDPOINT_ARN=$ENDPOINT_ARN"
+          echo "INSTANCE_ARN=$INSTANCE_ARN"
+          echo "TASK_ARN=$TASK_ARN"
+
           echo "ENDPOINT_ARN=$ENDPOINT_ARN" >> $GITHUB_ENV
           echo "INSTANCE_ARN=$INSTANCE_ARN" >> $GITHUB_ENV
           echo "TASK_ARN=$TASK_ARN" >> $GITHUB_ENV
