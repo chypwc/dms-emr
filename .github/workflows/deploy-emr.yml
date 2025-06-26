@@ -30,7 +30,7 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ github.event.inputs.region }}
-      
+
       - name: Upload Spark Script
         run: |
           aws s3 cp scripts/ s3://${{ github.event.inputs.SourceBucketName }}/scripts/ --recursive
@@ -39,11 +39,11 @@ jobs:
 
       - name: Deploy EMR spark job
         id: emr-spark
-        uses: aws-actions/aws-cloudformation-github-deploy@v1
+        uses: aws-actions/aws-cloudformation-github-deploy@v1.0.3
         with:
-        name: emr-spark
-        template: cfn/emr.yml
-        capabilities: CAPABILITY_NAMED_IAM
-        parameter-overrides: >-
-            ClusterName=emr-cluster-${{ env.TODAY }}
+          name: emr-spark
+          template: cfn/emr.yml
+          capabilities: CAPABILITY_NAMED_IAM
+          parameter-overrides: >-
+            ClusterName=emr-cluster-${{ env.TODAY }},
             SourceBucketName=${{ github.event.inputs.SourceBucketName }}
