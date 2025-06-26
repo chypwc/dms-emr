@@ -120,7 +120,7 @@ jobs:
             --output text)
 
           TASK_ARN=$(aws cloudformation describe-stacks \
-            --stack-name dms \
+            --stack-name dms-task \
             --query "Stacks[0].Outputs[?OutputKey=='ReplicationTaskArn'].OutputValue" \
             --output text)
 
