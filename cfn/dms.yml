@@ -6,6 +6,9 @@ Parameters:
     Type: String
     Description: PostgreSQL Credential Name in Secret Manager
     Default: postgresql_dms
+  SourceBucketName:
+    Description: Name the source Bucket
+    Type: String
 
 Resources:
   ## DMS S3 Target Endpoint ##
@@ -16,20 +19,14 @@ Resources:
       EndpointType: target
       EngineName: s3
       S3Settings:
-        BucketName: source-bucket-chien
+        BucketName: !Ref SourceBucketName
         BucketFolder: dms-input
         CompressionType: NONE
         CsvDelimiter: ","
         CsvRowDelimiter: "\n"
         DataFormat: csv
         DatePartitionEnabled: false
-      Username: ""
-      ServerName: ""
-      Port: 0
-      SslMode: none
-      ExtraConnectionAttributes: ""
-      KmsKeyId: ""
-      ServiceAccessRoleArn: !ImportValue EMRDMSGlueExecutionRoleArn
+        ServiceAccessRoleArn: !ImportValue EMRDMSGlueExecutionRoleArn
 
   ## DMS PostgreSQL Source Endpoint using Secrets Manager ##
   DmsPostgresSourceEndpoint:
@@ -38,13 +35,11 @@ Resources:
       EndpointIdentifier: postgresql-local-macbook
       EndpointType: source
       EngineName: postgres
-      Username: ""
-      ServerName: ""
-      Port: 0
       DatabaseName: imba
       SslMode: none
-      SecretsManagerAccessRoleArn: !ImportValue EMRDMSGlueExecutionRoleArn
+      Port: 5432
       SecretsManagerSecretId: !Ref PostgreSQLSecret
+      SecretsManagerAccessRoleArn: !ImportValue EMRDMSGlueExecutionRoleArn
 
   DmsReplicationSubnetGroup:
     Type: AWS::DMS::ReplicationSubnetGroup

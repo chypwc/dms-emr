@@ -87,6 +87,7 @@ jobs:
           name: dms
           template: cfn/dms.yml
           parameter-overrides: >-
+            SourceBucketName=${{ github.event.inputs.SourceBucketName }},
             PostgreSQLSecret=postgresql_dms
           capabilities: CAPABILITY_NAMED_IAM
 
