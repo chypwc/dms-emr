@@ -127,7 +127,7 @@ Resources:
           "StreamBufferSettings": {
             "StreamBufferCount": 8,
             "StreamBufferSizeInMB": 32,
-            "CtrlStreamBufferSizeInMB": 10
+            "CtrlStreamBufferSizeInMB": 5
           },
           "ErrorBehavior": {
             "DataErrorPolicy": "LOG_ERROR",
