@@ -114,41 +114,25 @@ Resources:
       ReplicationTaskSettings:
         Fn::Sub: |
           {
-          "TargetMetadata": {
-            "ParallelLoadThreads": 2,
-            "ParallelLoadBufferSize": 50,
-            "ParallelApplyThreads": 2,
-            "ParallelApplyBufferSize": 50,
-            "BatchApplyEnabled": true
-          },
           "FullLoadSettings": {
             "MaxFullLoadSubTasks": 4,
             "TransactionConsistencyTimeout": 600,
             "CommitRate": 25000,
-            "CreatePkAfterFullLoad": false
+            "CreatePkAfterFullLoad": false,
+            "TargetTablePrepMode": "DO_NOTHING"
           },
           "StreamBufferSettings": {
             "StreamBufferCount": 4,
             "StreamBufferSizeInMB": 16,
             "CtrlStreamBufferSizeInMB": 5
           },
-          "ChangeProcessingTuning": {
-            "BatchApplyPreserveTransaction": false,
-            "BatchApplyTimeoutMin": 1,
-            "BatchApplyTimeoutMax": 30,
-            "BatchApplyMemoryLimit": 200,
-            "BatchSplitSize": 10000,
-            "MinTransactionSize": 5000,
-            "CommitTimeout": 1,
-            "MemoryLimitTotal": 512,
-            "MemoryKeepTime": 60,
-            "StatementCacheSize": 50
-          },
           "ErrorBehavior": {
             "DataErrorPolicy": "LOG_ERROR",
             "FullLoadIgnoreConflicts": true,
             "RecoverableErrorCount": 5,
-            "RecoverableErrorInterval": 5
+            "RecoverableErrorInterval": 5,
+            "DataErrorEscalationPolicy": "SUSPEND_TABLE",
+            "TableErrorPolicy": "SUSPEND_TABLE"
           },
           "Logging": {
             "EnableLogging": true
