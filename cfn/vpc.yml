@@ -141,17 +141,17 @@ Resources:
       RouteTableId: !Ref PrivateRouteTable
 
 Outputs:
-  Shared-VpcId:
+  SharedVpcId:
     Value: !Ref VPC
     Export:
       Name: Shared-VpcId
 
-  Shared-PrivateSubnet1Id:
+  SharedPrivateSubnet1Id:
     Value: !Ref PrivateSubnet1
     Export:
       Name: Shared-PrivateSubnet1Id
 
-  Shared-PrivateSubnet2Id:
+  SharedPrivateSubnet2Id:
     Value: !Ref PrivateSubnet2
     Export:
       Name: Shared-PrivateSubnet2Id
