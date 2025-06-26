@@ -40,7 +40,7 @@ Resources:
         - Key: Name
           Value: EMR-DMS-Glue-ExecutionRole
 Outputs:
-   EMRDMSGlueExecutionRoleName:
+  EMRDMSGlueExecutionRoleName:
     Value: !Ref EMRDMSGlueExecutionRole
     Export:
       Name: EMRDMSGlueExecutionRoleName
