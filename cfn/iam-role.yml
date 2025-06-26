@@ -1,0 +1,35 @@
+Resources:
+  EMRDMSGlueExecutionRole:
+  Type: AWS::IAM::Role
+  Properties:
+    RoleName: EMR-DMS-Glue-ExecutionRole
+    AssumeRolePolicyDocument:
+      Version: "2012-10-17"
+      Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+              - elasticmapreduce.amazonaws.com
+              - dms.amazonaws.com
+              - glue.amazonaws.com
+          Action: sts:AssumeRole
+    ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/AmazonS3FullAccess # Access to S3 (e.g., logs, data)
+      - arn:aws:iam::aws:policy/AWSGlueConsoleFullAccess # Full Glue service access
+      - arn:aws:iam::aws:policy/AWSGlueServiceRole # Required for Glue jobs
+      - arn:aws:iam::aws:policy/service-role/AmazonDMSVPCManagementRole # Needed by DMS
+      - arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceRole # EMR core service role
+      - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess # Log writing access
+    Policies:
+      - PolicyName: CustomSecretAccess
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: "*" # You can restrict to specific secret ARNs
+
+    Tags:
+      - Key: Name
+        Value: EMR-DMS-Glue-ExecutionRole

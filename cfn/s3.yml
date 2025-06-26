@@ -1,0 +1,37 @@
+Parameters:
+  SourceBucketName:
+    Description: Name the source Bucket
+    Type: String
+  DataBucketName:
+    Description: Name the data Bucket
+    Type: String
+
+Resources:
+  DataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref SourceBucketName
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+
+  SourceDataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref DataBucketName
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+
+Outputs:
+  SourceBucketOutput:
+    Description: Source bucket name
+    Value: !Ref SourceBucketName
+
+  DataBucketOutput:
+    Description: Data bucket name
+    Value: !Ref DataBucketName

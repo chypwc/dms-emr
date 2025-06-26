@@ -1,0 +1,100 @@
+name: Deploy DMS
+
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+    inputs:
+      region:
+        description: "AWS Region"
+        required: true
+        default: "ap-southeast-2"
+      SourceBucketName:
+        description: "S3 Source Bucket Name"
+        default: "imba-chien"
+        required: true
+      DataBucketName:
+        description: "S3 Data Bucket Name"
+        default: "data-bucket-chien"
+        required: true
+      deployRole:
+        description: "Deploy IAM role?"
+        required: true
+        default: "false"
+      deployVpc:
+        description: "Deploy VPC Stack?"
+        required: true
+        default: "false"
+      deployS3:
+        description: "Deploy S3 Buckets Stack?"
+        required: true
+        default: "false"
+
+jobs:
+  cfn-deployment:
+    # if: ${{ github.event.inputs.deployResource == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        id: creds
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ github.event.inputs.region }}
+
+      - name: Deploy IAM role for DMS, EMR, and Glue
+        id: iam-role
+        if: ${{ github.event.inputs.deployRole == 'true' }}
+        uses: aws-actions/aws-cloudformation-github-deploy@v1.0.3
+        with:
+          name: iam-role
+          template: cfn/iam-role.yml
+          capabilities: CAPABILITY_NAMED_IAM
+
+      - name: Deploy VPC CloudFormation Stack
+        id: vpc-stack
+        if: ${{ github.event.inputs.deployVpc == 'true' }}
+        uses: aws-actions/aws-cloudformation-github-deploy@v1.0.3
+        with:
+          name: vpc-stack
+          template: cfn/vpc.yml
+          capabilities: CAPABILITY_NAMED_IAM
+
+      - name: Deploy S3 Buckets CloudFormation Stacks
+        id: s3-buckets
+        if: ${{ github.event.inputs.deployS3 == 'true' }}
+        uses: aws-actions/aws-cloudformation-github-deploy@v1.0.3
+        with:
+          name: s3-buckets
+          template: cfn/s3.yml
+          parameter-overrides: >-
+            SourceBucketName=${{ github.event.inputs.SourceBucketName }},
+            DataBucketName=${{ github.event.inputs.DataBucketName }}
+          capabilities: CAPABILITY_NAMED_IAM
+
+      - name: Deploy DMS endpoints, instance, and task
+        id: dms
+        uses: aws-actions/aws-cloudformation-github-deploy@v1.0.3
+        with:
+          name: dms
+          template: cfn/dms.yml
+          parameter-overrides: >-
+            PostgreSQLSecret=postgresql_dms
+          capabilities: CAPABILITY_NAMED_IAM
+
+    #   - name: Set today's date
+    #     run: echo "TODAY=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
+    #   - name: Deploy EMR spark job
+    #     id: emr-spark
+    #     uses: aws-actions/aws-cloudformation-github-deploy@v1
+    #     with:
+    #       name: emr-spark
+    #       template: cfn/emr.yml
+    #       capabilities: CAPABILITY_NAMED_IAM
+    #       parameter-overrides: >-
+    #         ClusterName=emr-cluster-${{ env.TODAY }}
+    #         SourceBucketName=${{ github.event.inputs.SourceBucketName }}

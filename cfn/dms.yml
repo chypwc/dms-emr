@@ -1,0 +1,166 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Create AWS DMS source (PostgreSQL), target (S3) endpoints, AWS DMS Replication Instance
+
+Parameters:
+  PostgreSQLSecret:
+    Type: String
+    Description: PostgreSQL Credential Name in Secret Manager
+    Default: postgresql_dms
+  VpcId:
+    Type: String
+    Description: Imported VPC ID
+    Default: !ImportValue Shared-VpcId
+
+  Subnet1:
+    Type: String
+    Description: Private Subnet 1
+    Default: !ImportValue Shared-PrivateSubnet1Id
+
+  Subnet2:
+    Type: String
+    Description: Private Subnet 2
+    Default: !ImportValue Shared-PrivateSubnet2Id
+
+Resources:
+  ## DMS S3 Target Endpoint ##
+  DmsS3TargetEndpoint:
+    Type: AWS::DMS::Endpoint
+    Properties:
+      EndpointIdentifier: dms-s3-target
+      EndpointType: target
+      EngineName: s3
+      S3Settings:
+        BucketName: source-bucket-chien
+        BucketFolder: dms-input
+        CompressionType: NONE
+        CsvDelimiter: ","
+        CsvRowDelimiter: "\n"
+        DataFormat: csv
+        DatePartitionEnabled: false
+      Username: ""
+      ServerName: ""
+      Port: 0
+      SslMode: none
+      ExtraConnectionAttributes: ""
+      KmsKeyId: ""
+      ServiceAccessRoleArn: !GetAtt EMRDMSGlueExecutionRole.Arn
+
+  ## DMS PostgreSQL Source Endpoint using Secrets Manager ##
+  DmsPostgresSourceEndpoint:
+    Type: AWS::DMS::Endpoint
+    Properties:
+      EndpointIdentifier: postgresql-local-macbook
+      EndpointType: source
+      EngineName: postgres
+      Username: ""
+      ServerName: ""
+      Port: 0
+      DatabaseName: imba
+      SslMode: none
+      SecretsManagerAccessRoleArn: !GetAtt EMRDMSGlueExecutionRole.Arn
+      SecretsManagerSecretId: !Ref PostgreSQLSecret
+
+  DmsReplicationSubnetGroup:
+    Type: AWS::DMS::ReplicationSubnetGroup
+    Properties:
+      ReplicationSubnetGroupIdentifier: dms-subnet-group
+      ReplicationSubnetGroupDescription: Subnet group for DMS replication instance
+      SubnetIds:
+        - !Ref Subnet1
+        - !Ref Subnet2
+
+  DMSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow DMS access to PostgreSQL
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          CidrIp: 10.0.0.0/16
+      Tags:
+        - Key: Name
+          Value: DMSSecurityGroup
+
+  ## DMS Replication Instance ##
+  DmsReplicationInstance:
+    Type: AWS::DMS::ReplicationInstance
+    DependsOn:
+      - DmsReplicationSubnetGroup
+      - DMSSecurityGroup
+    Properties:
+      ReplicationInstanceIdentifier: dms-replication-instance
+      ReplicationInstanceClass: dms.t3.medium
+      AllocatedStorage: 100
+      VpcSecurityGroupIds:
+        - !Ref DMSSecurityGroup
+      ReplicationSubnetGroupIdentifier: !Ref DmsReplicationSubnetGroup
+      PubliclyAccessible: false
+      AutoMinorVersionUpgrade: true
+      MultiAZ: false
+      Tags:
+        - Key: Name
+          Value: dms-replication-instance
+
+  ## DMS Replication Task ##
+  DmsReplicationTask:
+    Type: AWS::DMS::ReplicationTask
+    Properties:
+      ReplicationTaskIdentifier: dms-postgres-to-s3-task
+      SourceEndpointArn: !Ref DmsPostgresSourceEndpoint
+      TargetEndpointArn: !Ref DmsS3TargetEndpoint
+      ReplicationInstanceArn: !Ref DmsReplicationInstance
+      MigrationType: full-load
+      TableMappings:
+        Fn::Sub: |
+          {
+            "rules": [
+              {
+                "rule-type": "selection",
+                "rule-id": "1",
+                "rule-name": "1",
+                "object-locator": {
+                  "schema-name": "public",
+                  "table-name": "%"
+                },
+                "rule-action": "include"
+              }
+            ]
+          }
+      ReplicationTaskSettings:
+        Fn::Sub: |
+          {
+            "TargetMetadata": {
+              "TargetSchema": "",
+              "SupportLobs": false,
+              "FullLobMode": false,
+              "LimitedSizeLobMode": false,
+              "LobChunkSize": 0,
+              "LobMaxSize": 0,
+              "LoadMaxFileSize": 0,
+              "ParallelLoadThreads": 0,
+              "ParallelLoadBufferSize": 0,
+              "BatchApplyEnabled": false,
+              "TaskRecoveryTableEnabled": false
+            },
+            "FullLoadSettings": {
+              "TargetTablePrepMode": "DO_NOTHING",
+              "CreatePkAfterFullLoad": false,
+              "StopTaskCachedChangesApplied": false,
+              "StopTaskCachedChangesNotApplied": false,
+              "MaxFullLoadSubTasks": 8,
+              "TransactionConsistencyTimeout": 600,
+              "CommitRate": 10000
+            },
+            "Logging": {
+              "EnableLogging": true
+            },
+            "ControlTablesSettings": {
+              "historyTimeslotInMinutes": 5,
+              "controlSchema": "dms_control"
+            },
+            "ValidationSettings": {
+              "EnableValidation": false
+            }
+          }
