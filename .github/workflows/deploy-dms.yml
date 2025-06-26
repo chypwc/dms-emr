@@ -32,6 +32,10 @@ on:
         description: "Deploy DMS?"
         required: true
         default: "false"
+      deployDMSTask:
+        description: "Deploy DMS task?"
+        required: true
+        default: "false"
 
 jobs:
   cfn-deployment:
@@ -81,7 +85,7 @@ jobs:
             DataBucketName=${{ github.event.inputs.DataBucketName }}
           capabilities: CAPABILITY_NAMED_IAM
 
-      - name: Deploy DMS endpoints, instance, and task
+      - name: Deploy DMS endpoints, instance,
         id: dms
         if: ${{ github.event.inputs.deployDMS == 'true' }}
         uses: aws-actions/aws-cloudformation-github-deploy@v1.0.3
@@ -91,6 +95,15 @@ jobs:
           parameter-overrides: >-
             SourceBucketName=${{ github.event.inputs.SourceBucketName }},
             PostgreSQLSecret=postgresql_dms
+          capabilities: CAPABILITY_NAMED_IAM
+
+      - name: Deploy DMS task
+        id: dms-task
+        if: ${{ github.event.inputs.deployDMSTask == 'true' }}
+        uses: aws-actions/aws-cloudformation-github-deploy@v1.0.3
+        with:
+          name: dms-task
+          template: cfn/dms-task.yml
           capabilities: CAPABILITY_NAMED_IAM
 
       - name: Extract DMS Endpoint, Instance, and Task ARNs

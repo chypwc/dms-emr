@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Create AWS DMS source (PostgreSQL), target (S3) endpoints, AWS DMS Replication Instance
+
+Resources:
+  ## DMS Replication Task ##
+  DmsReplicationTask:
+    Type: AWS::DMS::ReplicationTask
+    Properties:
+      ReplicationTaskIdentifier: dms-postgres-to-s3-task
+      SourceEndpointArn: !ImportValue DmsPostgresSourceEndpoint
+      TargetEndpointArn: !ImportValu DmsS3TargetEndpoint
+      ReplicationInstanceArn: !ImportValu DmsReplicationInstance
+      MigrationType: full-load
+      TableMappings:
+        Fn::Sub: |
+          {
+            "rules": [
+              {
+                "rule-type": "selection",
+                "rule-id": "1",
+                "rule-name": "1",
+                "object-locator": {
+                  "schema-name": "public",
+                  "table-name": "%"
+                },
+                "rule-action": "include"
+              }
+            ]
+          }
+      ReplicationTaskSettings:
+        Fn::Sub: |
+          {
+          "FullLoadSettings": {
+            "MaxFullLoadSubTasks": 8,
+            "TransactionConsistencyTimeout": 600,
+            "CommitRate": 50000,
+            "CreatePkAfterFullLoad": false,
+            "TargetTablePrepMode": "DO_NOTHING"
+          },
+          "StreamBufferSettings": {
+            "StreamBufferCount": 8,
+            "StreamBufferSizeInMB": 32,
+            "CtrlStreamBufferSizeInMB": 5
+          },
+          "ErrorBehavior": {
+            "DataErrorPolicy": "LOG_ERROR",
+            "FullLoadIgnoreConflicts": true,
+            "RecoverableErrorCount": 5,
+            "RecoverableErrorInterval": 5,
+            "DataErrorEscalationPolicy": "SUSPEND_TABLE",
+            "TableErrorPolicy": "SUSPEND_TABLE"
+          },
+          "Logging": {
+            "EnableLogging": true
+          },
+          "ControlTablesSettings": {
+            "historyTimeslotInMinutes": 5,
+            "controlSchema": "dms_control",
+            "HistoryTableEnabled": false,
+            "StatusTableEnabled": false
+          },
+          "ValidationSettings": {
+            "EnableValidation": false
+          }
+          }
+
+Outputs:
+  ReplicationTaskArn:
+    Description: DMS Replication Task
+    Value: !Ref DmsReplicationTask
