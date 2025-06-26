@@ -56,4 +56,12 @@ aisles_df = spark.read \
 
 order_products = order_products__prior_df.unionByName(order_products__train_df)
 
-# order_products.show(5)
+
+output_prefix = f"s3://{data_bucket}/parquet/"
+
+# Save each DataFrame as Parquet
+order_products.write.mode("overwrite").parquet(output_prefix + "order_products")
+orders_df.write.mode("overwrite").parquet(output_prefix + "orders")
+products_df.write.mode("overwrite").parquet(output_prefix + "products")
+departments_df.write.mode("overwrite").parquet(output_prefix + "departments")
+aisles_df.write.mode("overwrite").parquet(output_prefix + "aisles")

@@ -81,7 +81,7 @@ Resources:
       VpcSecurityGroupIds:
         - !Ref DMSSecurityGroup
       ReplicationSubnetGroupIdentifier: !Ref DmsReplicationSubnetGroup
-      PubliclyAccessible: false
+      PubliclyAccessible: true
       AutoMinorVersionUpgrade: true
       MultiAZ: false
       Tags:
