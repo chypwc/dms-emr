@@ -26,7 +26,6 @@ Resources:
         # CsvRowDelimiter: "\n"
         # DataFormat: csv
         DataFormat: parquet
-        CompressionType: parquet
         ParquetVersion: parquet-1-0
         EnableStatistics: false
         MaxFileSize: 128000
