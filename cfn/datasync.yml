@@ -1,0 +1,79 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: EC2 NFS Server and DataSync Agent Setup
+
+Parameters:
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Name of an existing EC2 KeyPair to SSH into instances
+
+Resources:
+  NFSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable NFS access
+      VpcId: !ImportValue Shared-VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 2049
+          ToPort: 2049
+          CidrIp: 10.0.0.0/16
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+  AgentSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable outbound access for DataSync Agent
+      VpcId: !ImportValue Shared-VpcId
+      SSecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 2049
+          ToPort: 2049
+          CidrIp: 10.0.0.0/16
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 10.0.0.0/16
+
+  NFSInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      KeyName: !Ref KeyName
+      ImageId: ami-07b49f39109fb4cd6
+      SubnetId: !Ref PublicSubnetId
+      SecurityGroupIds:
+        - !Ref NFSSecurityGroup
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum update -y
+          yum install -y nfs-utils
+          mkdir -p /data
+          chmod 777 /data
+          echo "/data *(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
+          systemctl enable nfs-server
+          systemctl start nfs-server
+          exportfs -a
+
+  DataSyncAgent:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.medium
+      KeyName: !Ref KeyName
+      ImageId: ami-07b49f39109fb4cd6
+      SubnetId: !Ref PrivateSubnetId
+      SecurityGroupIds:
+        - !Ref AgentSecurityGroup
+      UserData:
+
+Outputs:
+  NFSInstancePublicIP:
+    Description: Public IP of the NFS Server
+    Value: !GetAtt NFSInstance.PublicIp
+
+  AgentPrivateIP:
+    Description: Private IP of the DataSync Agent
+    Value: !GetAtt DataSyncAgent.PrivateIp

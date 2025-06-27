@@ -33,7 +33,7 @@ Resources:
             "FullLoadSettings": {
               "MaxFullLoadSubTasks": 16,
               "TransactionConsistencyTimeout": 600,
-              "CommitRate": 100000,
+              "CommitRate": 50000,
               "CreatePkAfterFullLoad": false,
               "TargetTablePrepMode": "DO_NOTHING"
             },
@@ -97,7 +97,7 @@ Resources:
             "FullLoadSettings": {
               "MaxFullLoadSubTasks": 16,
               "TransactionConsistencyTimeout": 600,
-              "CommitRate": 100000,
+              "CommitRate": 50000,
               "CreatePkAfterFullLoad": false,
               "TargetTablePrepMode": "DO_NOTHING"
             },
