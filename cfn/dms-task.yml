@@ -17,7 +17,7 @@ Resources:
             "rules": [
               {
                 "rule-type": "selection",
-                "rule-id": "small-tables",
+                "rule-id": "1",
                 "rule-name": "small-tables",
                 "object-locator": {
                   "schema-name": "public",
@@ -81,7 +81,7 @@ Resources:
             "rules": [
               {
                 "rule-type": "selection",
-                "rule-id": "large-table",
+                "rule-id": "2",
                 "rule-name": "large-table",
                 "object-locator": {
                   "schema-name": "public",

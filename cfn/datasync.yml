@@ -5,6 +5,7 @@ Parameters:
   KeyName:
     Type: AWS::EC2::KeyPair::KeyName
     Description: Name of an existing EC2 KeyPair to SSH into instances
+    Default: Macbook
 
 Resources:
   NFSSecurityGroup:
@@ -36,16 +37,38 @@ Resources:
           FromPort: 443
           ToPort: 443
           CidrIp: 10.0.0.0/16
+  DataSyncAgentRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Path: "/"
+      RoleName: DataSyncAgentSSMRole
+
+  DataSyncAgentInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref DataSyncAgentRole
+      InstanceProfileName: DataSyncAgentInstanceProfile
 
   NFSInstance:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: t2.micro
       KeyName: !Ref KeyName
-      ImageId: ami-07b49f39109fb4cd6
-      SubnetId: !Ref PublicSubnetId
+      ImageId: ami-03e5b56661e12efa2
+      SubnetId: !ImportValue Shared-PublicSubnet1Id
       SecurityGroupIds:
         - !Ref NFSSecurityGroup
+      AssociatePublicIpAddress: true
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
@@ -64,10 +87,10 @@ Resources:
       InstanceType: t2.medium
       KeyName: !Ref KeyName
       ImageId: ami-07b49f39109fb4cd6
-      SubnetId: !Ref PrivateSubnetId
+      SubnetId: !ImportValue Shared-PrivateSubnet1Id
       SecurityGroupIds:
         - !Ref AgentSecurityGroup
-      UserData:
+      IamInstanceProfile: !Ref DataSyncAgentInstanceProfile
 
 Outputs:
   NFSInstancePublicIP:
