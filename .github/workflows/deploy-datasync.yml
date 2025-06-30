@@ -72,6 +72,7 @@ jobs:
           name: vpc-stack
           template: cfn/vpc.yml
           capabilities: CAPABILITY_NAMED_IAMo
+
       - name: Deploy S3 Buckets CloudFormation Stacks
         id: s3-buckets
         if: ${{ github.event.inputs.deployS3 == 'true' }}
@@ -82,4 +83,13 @@ jobs:
           parameter-overrides: >-
             SourceBucketName=${{ github.event.inputs.SourceBucketName }},
             DataBucketName=${{ github.event.inputs.DataBucketName }}
+          capabilities: CAPABILITY_NAMED_IAM
+
+      - name: Deploy DataSync
+        id: datasync
+        if: ${{ github.event.inputs.deployS3 == 'true' }}
+        uses: aws-actions/aws-cloudformation-github-deploy@v1.0.3
+        with:
+          name: datasync
+          template: cfn/datasync.yml
           capabilities: CAPABILITY_NAMED_IAM
