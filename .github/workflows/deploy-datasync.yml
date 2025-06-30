@@ -83,5 +83,3 @@ jobs:
             SourceBucketName=${{ github.event.inputs.SourceBucketName }},
             DataBucketName=${{ github.event.inputs.DataBucketName }}
           capabilities: CAPABILITY_NAMED_IAM
-
-      - name:

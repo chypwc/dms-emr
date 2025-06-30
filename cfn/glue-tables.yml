@@ -155,7 +155,7 @@ Resources:
               Type: int
             - Name: add_to_cart_order
               Type: string
-            - Name: reordered
+            - Name: order_number
               Type: boolean
 
   OrderProductsPriorTable:
